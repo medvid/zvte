@@ -1,8 +1,9 @@
 [Desktop Entry]
-Name=Zvte
-Comment=Use the command line
+Type=Application
+TryExec=zvte
 Exec=zvte
 Icon=utilities-terminal
-Type=Application
-Categories=GTK;System;TerminalEmulator;
-StartupNotify=true
+Terminal=false
+
+Name=Zvte
+GenericName=Terminal
