@@ -1,7 +1,6 @@
 PREFIX = /usr/local
 GTK = gtk+-3.0
 VTE = vte-2.90
-TERMINFO = ${PREFIX}/share/terminfo
 
 CFLAGS := -std=c99 -O3 \
 	  -Wall -Wextra -pedantic \
@@ -26,10 +25,8 @@ LDLIBS := ${shell pkg-config --libs ${GTK} ${VTE}}
 zvte: zvte.c config.h
 	${CC} ${CFLAGS} ${LDFLAGS} $< ${LDLIBS} -o $@
 
-install: zvte zvte.desktop
-	mkdir -p ${DESTDIR}${TERMINFO}
+install: zvte
 	install -Dm755 zvte ${DESTDIR}${PREFIX}/bin/zvte
-	install -Dm644 zvte.desktop ${DESTDIR}${PREFIX}/share/applications/zvte.desktop
 
 uninstall:
 	rm -f ${DESTDIR}${PREFIX}/bin/zvte
