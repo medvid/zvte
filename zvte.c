@@ -200,7 +200,7 @@ static void exit_with_success(void)
 int main(int argc, char **argv)
 {
     GError *error = NULL;
-    const char *const term = "xterm-zvte";
+    const char *const term = "xterm-256color";
     char *directory = NULL;
     gboolean hold = FALSE;
 
