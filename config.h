@@ -8,8 +8,6 @@
 #define SCROLLBACK_LINES        1000
 #define ICON_NAME               "terminal"
 
-#define BROWSER                 "firefox"
-
 #define FONT                    "Monospace 13"
 
 // word characters used for word selection

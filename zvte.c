@@ -6,7 +6,7 @@
 
 #include "config.h"
 
-static void launch_browser(char *browser, char *url);
+static void launch_browser(char *url);
 static void window_title_cb(VteTerminal *vte);
 static gboolean key_press_cb(VteTerminal *vte, GdkEventKey *event);
 static gboolean button_press_cb(VteTerminal *vte, GdkEventButton *event);
@@ -17,13 +17,14 @@ static void get_vte_padding(VteTerminal *vte, int *left, int *top, int *right, i
 static char *check_match(VteTerminal *vte, int event_x, int event_y);
 static void setup(GtkWindow *window, VteTerminal *vte);
 
-void launch_browser(char *browser, char *url)
+static void launch_browser(char *url)
 {
+    char *browser = g_strdup(g_getenv("BROWSER"));;
     char *browser_cmd[3] = {browser, url, NULL};
     GError *error = NULL;
 
     if (!browser) {
-        g_printerr("browser not set, can't open url\n");
+        g_printerr("$BROWSER not set, can't open url\n");
         return;
     }
 
@@ -33,16 +34,17 @@ void launch_browser(char *browser, char *url)
         g_printerr("error launching '%s': %s\n", browser, error->message);
         g_error_free(error);
     }
+    g_free(browser);
 }
 
-void window_title_cb(VteTerminal *vte)
+static void window_title_cb(VteTerminal *vte)
 {
     const char *const title = vte_terminal_get_window_title(vte);
     gtk_window_set_title(GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(vte))),
                          title ? title : "zvte");
 }
 
-gboolean key_press_cb(VteTerminal *vte, GdkEventKey *event)
+static gboolean key_press_cb(VteTerminal *vte, GdkEventKey *event)
 {
     const guint modifiers = event->state & gtk_accelerator_get_default_mod_mask();
 
@@ -59,14 +61,14 @@ gboolean key_press_cb(VteTerminal *vte, GdkEventKey *event)
     return FALSE;
 }
 
-gboolean button_press_cb(VteTerminal *vte, GdkEventButton *event)
+static gboolean button_press_cb(VteTerminal *vte, GdkEventButton *event)
 {
     char *match = check_match(vte, (int)event->x, (int)event->y);
     if (!match)
         return FALSE;
 
     if (event->button == 1) {
-        launch_browser(BROWSER, match);
+        launch_browser(match);
     } else if(event->button == 3) {
         GtkClipboard *clipboard = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
         gtk_clipboard_set_text(clipboard, match, -1);
@@ -76,18 +78,18 @@ gboolean button_press_cb(VteTerminal *vte, GdkEventButton *event)
     return TRUE;
 }
 
-void beep_cb(GtkWidget *vte)
+static void beep_cb(GtkWidget *vte)
 {
     gtk_window_set_urgency_hint(GTK_WINDOW(gtk_widget_get_toplevel(vte)), TRUE);
 }
 
-gboolean focus_cb(GtkWindow *window)
+static gboolean focus_cb(GtkWindow *window)
 {
     gtk_window_set_urgency_hint(window, FALSE);
     return FALSE;
 }
 
-void get_vte_padding(VteTerminal *vte, int *left, int *top, int *right, int *bottom)
+static void get_vte_padding(VteTerminal *vte, int *left, int *top, int *right, int *bottom)
 {
     GtkBorder *border = NULL;
     gtk_widget_style_get(GTK_WIDGET(vte), "inner-border", &border, NULL);
@@ -103,7 +105,7 @@ void get_vte_padding(VteTerminal *vte, int *left, int *top, int *right, int *bot
     }
 }
 
-char *check_match(VteTerminal *vte, int event_x, int event_y)
+static char *check_match(VteTerminal *vte, int event_x, int event_y)
 {
     int tag, padding_left, padding_top, padding_right, padding_bottom;
     const long char_width = vte_terminal_get_char_width(vte);
