@@ -26,9 +26,10 @@ LDLIBS := ${shell pkg-config --libs ${GTK} ${VTE}}
 zvte: zvte.c config.h
 	${CC} ${CFLAGS} ${LDFLAGS} $< ${LDLIBS} -o $@
 
-install: zvte zvte.terminfo
+install: zvte zvte.desktop zvte.terminfo
 	mkdir -p ${DESTDIR}${TERMINFO}
 	install -Dm755 zvte ${DESTDIR}${PREFIX}/bin/zvte
+	install -Dm644 zvte.desktop ${DESTDIR}${PREFIX}/share/applications/zvte.desktop
 	tic -x zvte.terminfo -o ${DESTDIR}${TERMINFO}
 
 uninstall:
