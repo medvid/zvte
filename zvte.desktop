@@ -4,6 +4,7 @@ TryExec=zvte
 Exec=zvte
 Icon=utilities-terminal
 Terminal=false
+Categories=System;TerminalEmulator;
 
 Name=Zvte
 GenericName=Terminal
