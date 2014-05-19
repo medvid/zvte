@@ -46,6 +46,7 @@ static void window_title_cb(VteTerminal *vte)
 
 static gboolean key_press_cb(VteTerminal *vte, GdkEventKey *event)
 {
+    const char *text = NULL;
     const guint modifiers = event->state & gtk_accelerator_get_default_mod_mask();
 
     if (modifiers == (GDK_CONTROL_MASK|GDK_SHIFT_MASK)) {
@@ -57,6 +58,33 @@ static gboolean key_press_cb(VteTerminal *vte, GdkEventKey *event)
                 vte_terminal_paste_clipboard(vte);
                 return TRUE;
         }
+    } else if (modifiers == GDK_MOD1_MASK) {
+        switch (gdk_keyval_to_lower(event->keyval)) {
+            case GDK_KEY_1:
+                text = "\033[1;3P"; break;
+            case GDK_KEY_2:
+                text = "\033[1;3Q"; break;
+            case GDK_KEY_3:
+                text = "\033[1;3R"; break;
+            case GDK_KEY_4:
+                text = "\033[1;3S"; break;
+            case GDK_KEY_5:
+                text = "\033[15;3~"; break;
+            case GDK_KEY_6:
+                text = "\033[17;3~"; break;
+            case GDK_KEY_7:
+                text = "\033[18;3~"; break;
+            case GDK_KEY_8:
+                text = "\033[19;3~"; break;
+            case GDK_KEY_9:
+                text = "\033[20;3~"; break;
+            case GDK_KEY_0:
+                text = "\033[21;3~"; break;
+        }
+    }
+    if (text) {
+        vte_terminal_feed_child(vte, text, -1);
+        return TRUE;
     }
     return FALSE;
 }
