@@ -48,9 +48,10 @@ static gboolean key_press_cb(VteTerminal *vte, GdkEventKey *event)
 {
     const char *text = NULL;
     const guint modifiers = event->state & gtk_accelerator_get_default_mod_mask();
+    const guint keyval = gdk_keyval_to_lower(event->keyval);
 
     if (modifiers == (GDK_CONTROL_MASK|GDK_SHIFT_MASK)) {
-        switch (gdk_keyval_to_lower(event->keyval)) {
+        switch (keyval) {
             case GDK_KEY_c:
                 vte_terminal_copy_clipboard(vte);
                 return TRUE;
@@ -58,8 +59,61 @@ static gboolean key_press_cb(VteTerminal *vte, GdkEventKey *event)
                 vte_terminal_paste_clipboard(vte);
                 return TRUE;
         }
+    } else if (modifiers == GDK_CONTROL_MASK) {
+        switch (keyval) {
+            /* alt+num -> alt+num */
+            case GDK_KEY_1:
+                text = "\0331"; break;
+            case GDK_KEY_2:
+                text = "\0332"; break;
+            case GDK_KEY_3:
+                text = "\0333"; break;
+            case GDK_KEY_4:
+                text = "\0334"; break;
+            case GDK_KEY_5:
+                text = "\0335"; break;
+            case GDK_KEY_6:
+                text = "\0336"; break;
+            case GDK_KEY_7:
+                text = "\0337"; break;
+            case GDK_KEY_8:
+                text = "\0338"; break;
+            case GDK_KEY_9:
+                text = "\0339"; break;
+            case GDK_KEY_0:
+                text = "\0330"; break;
+        }
+    } else if (modifiers == GDK_SHIFT_MASK) {
+        switch (keyval) {
+            case GDK_KEY_F1:
+                text = "\033[23~"; break;
+            case GDK_KEY_F2:
+                text = "\033[24~"; break;
+            case GDK_KEY_F3:
+                text = "\033[25~"; break;
+            case GDK_KEY_F4:
+                text = "\033[26~"; break;
+            case GDK_KEY_F5:
+                text = "\033[28~"; break;
+            case GDK_KEY_F6:
+                text = "\033[29~"; break;
+            case GDK_KEY_F7:
+                text = "\033[31~"; break;
+            case GDK_KEY_F8:
+                text = "\033[32~"; break;
+            case GDK_KEY_F9:
+                text = "\033[33~"; break;
+            case GDK_KEY_F10:
+                text = "\033[34~"; break;
+        }
     } else if (modifiers == GDK_MOD1_MASK) {
-        switch (gdk_keyval_to_lower(event->keyval)) {
+        switch (keyval) {
+            case GDK_KEY_c:
+                vte_terminal_copy_clipboard(vte);
+                return TRUE;
+            case GDK_KEY_v:
+                vte_terminal_paste_clipboard(vte);
+                return TRUE;
             case GDK_KEY_1:
                 text = "\033[1;3P"; break;
             case GDK_KEY_2:
