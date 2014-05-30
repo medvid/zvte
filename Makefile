@@ -13,7 +13,6 @@ CFLAGS := -std=c99 -O3 \
 	  -Wcast-qual \
 	  -Wconversion \
 	  -Wunused-macros \
-	  -Wwrite-strings \
 	  -DNDEBUG \
 	  -D_POSIX_C_SOURCE=200809L \
 	  ${shell pkg-config --cflags ${GTK} ${VTE}} \

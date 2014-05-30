@@ -6,7 +6,6 @@
 #define MOUSE_AUTOHIDE          FALSE
 #define ALLOW_BOLD              TRUE
 #define SCROLLBACK_LINES        1000
-#define ICON_NAME               "terminal"
 
 #define FONT                    "Monospace 13"
 
@@ -47,14 +46,4 @@ static const char *COLORS[16] = {
 };
 
 // Regular expression for URL matching
-#define USERCHARS       "-[:alnum:]"
-#define USERCHARS_CLASS "[" USERCHARS "]"
-#define PASSCHARS_CLASS "[-[:alnum:]\\Q,?;.:/!%$^*&~\"#'\\E]"
-#define HOSTCHARS_CLASS "[-[:alnum:]]"
-#define HOST            "(?:" HOSTCHARS_CLASS "+(\\." HOSTCHARS_CLASS "+)*)?"
-#define PORT            "(?:\\:[[:digit:]]{1,5})?"
-#define SCHEME          "(?:[[:alpha:]][+-.[:alnum:]]*:)"
-#define USERPASS        USERCHARS_CLASS "+(?:" PASSCHARS_CLASS "+)?"
-#define URLPATH         "(?:/[[:alnum:]\\Q-_.!~*'();/?:@&=+$,#%\\E]*)?"
-
-const char * const url_regex = SCHEME "//(?:" USERPASS "\\@)?" HOST PORT URLPATH;
+static const gchar url_regex[] = "(ftp|http)s?://[-a-zA-Z0-9.?$%&/=_~#.,:;+]*";

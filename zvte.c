@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-static void launch_browser(char *url);
-static void window_title_cb(VteTerminal *vte);
 static gboolean key_press_cb(VteTerminal *vte, GdkEventKey *event);
 static gboolean button_press_cb(VteTerminal *vte, GdkEventButton *event);
 static void beep_cb(GtkWidget *vte);
@@ -17,33 +15,6 @@ static void get_vte_padding(VteTerminal *vte, int *left, int *top, int *right, i
 static char *check_match(VteTerminal *vte, int event_x, int event_y);
 static void setup(GtkWindow *window, VteTerminal *vte);
 
-static void launch_browser(char *url)
-{
-    char *browser = g_strdup(g_getenv("BROWSER"));;
-    char *browser_cmd[3] = {browser, url, NULL};
-    GError *error = NULL;
-
-    if (!browser) {
-        g_printerr("$BROWSER not set, can't open url\n");
-        return;
-    }
-
-    g_spawn_async(NULL, browser_cmd, NULL, G_SPAWN_SEARCH_PATH,
-                  NULL, NULL, NULL, &error);
-    if (error) {
-        g_printerr("error launching '%s': %s\n", browser, error->message);
-        g_error_free(error);
-    }
-    g_free(browser);
-}
-
-static void window_title_cb(VteTerminal *vte)
-{
-    const char *const title = vte_terminal_get_window_title(vte);
-    gtk_window_set_title(GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(vte))),
-                         title ? title : "zvte");
-}
-
 static gboolean key_press_cb(VteTerminal *vte, GdkEventKey *event)
 {
     const char *text = NULL;
@@ -52,6 +23,7 @@ static gboolean key_press_cb(VteTerminal *vte, GdkEventKey *event)
 
     if (modifiers == (GDK_CONTROL_MASK|GDK_SHIFT_MASK)) {
         switch (keyval) {
+            /* copy/paste with Ctrl+Shift+c/Ctrl+Shift+v */
             case GDK_KEY_c:
                 vte_terminal_copy_clipboard(vte);
                 return TRUE;
@@ -61,7 +33,7 @@ static gboolean key_press_cb(VteTerminal *vte, GdkEventKey *event)
         }
     } else if (modifiers == GDK_CONTROL_MASK) {
         switch (keyval) {
-            /* alt+num -> alt+num */
+            /* Ctrl+num -> Alt+num */
             case GDK_KEY_1:
                 text = "\0331"; break;
             case GDK_KEY_2:
@@ -85,6 +57,7 @@ static gboolean key_press_cb(VteTerminal *vte, GdkEventKey *event)
         }
     } else if (modifiers == GDK_SHIFT_MASK) {
         switch (keyval) {
+            /* fix Shift+Fnum */
             case GDK_KEY_F1:
                 text = "\033[23~"; break;
             case GDK_KEY_F2:
@@ -108,12 +81,14 @@ static gboolean key_press_cb(VteTerminal *vte, GdkEventKey *event)
         }
     } else if (modifiers == GDK_MOD1_MASK) {
         switch (keyval) {
+            /* copy/paste with Alt+c/Alt+v */
             case GDK_KEY_c:
                 vte_terminal_copy_clipboard(vte);
                 return TRUE;
             case GDK_KEY_v:
                 vte_terminal_paste_clipboard(vte);
                 return TRUE;
+            /* Alt+num -> Alt+Fnum */
             case GDK_KEY_1:
                 text = "\033[1;3P"; break;
             case GDK_KEY_2:
@@ -150,7 +125,11 @@ static gboolean button_press_cb(VteTerminal *vte, GdkEventButton *event)
         return FALSE;
 
     if (event->button == 1) {
-        launch_browser(match);
+        GError *gerror = NULL;
+        if (!gtk_show_uri(NULL, match, event->time, &gerror)) {
+            g_printerr ("Could not open URL: %s\n", gerror->message);
+            g_error_free (gerror);
+        }
     } else if(event->button == 3) {
         GtkClipboard *clipboard = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
         gtk_clipboard_set_text(clipboard, match, -1);
@@ -263,7 +242,7 @@ static void setup(GtkWindow *window, VteTerminal *vte)
     vte_terminal_set_scrollback_lines(vte, SCROLLBACK_LINES);
     vte_terminal_set_cursor_blink_mode(vte, CURSOR_BLINK);
     vte_terminal_set_cursor_shape(vte, CURSOR_SHAPE);
-    gtk_window_set_icon_name(window, ICON_NAME);
+    gtk_window_set_icon_name(window, "terminal");
 
     load_theme(window, vte);
 }
@@ -290,11 +269,9 @@ int main(int argc, char **argv)
 
     GOptionContext *context = g_option_context_new(NULL);
     char *role = NULL, *execute = NULL;
-    char *title = NULL;
     const GOptionEntry entries[] = {
         {"exec", 'e', 0, G_OPTION_ARG_STRING, &execute, "Command to execute", "COMMAND"},
         {"role", 'r', 0, G_OPTION_ARG_STRING, &role, "The role to use", "ROLE"},
-        {"title", 't', 0, G_OPTION_ARG_STRING, &title, "Window title", "TITLE"},
         {"directory", 'd', 0, G_OPTION_ARG_STRING, &directory, "Change to directory", "DIRECTORY"},
         {"hold", 0, 0, G_OPTION_ARG_NONE, &hold, "Remain open after child process exits", NULL},
         {NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL}
@@ -376,13 +353,9 @@ int main(int argc, char **argv)
     g_signal_connect(window, "focus-in-event",  G_CALLBACK(focus_cb), NULL);
     g_signal_connect(window, "focus-out-event", G_CALLBACK(focus_cb), NULL);
 
-    if (title) {
-        gtk_window_set_title(GTK_WINDOW(window), title);
-        g_free(title);
-    } else {
-        g_signal_connect(vte, "window-title-changed", G_CALLBACK(window_title_cb), NULL);
-        window_title_cb(vte);
-    }
+    g_object_bind_property (G_OBJECT (vte), "window-title",
+                            G_OBJECT (window), "title",
+                            G_BINDING_DEFAULT);
 
     gtk_widget_grab_focus(vte_widget);
     gtk_widget_show_all(window);
