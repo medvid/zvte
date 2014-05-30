@@ -55,6 +55,30 @@ static gboolean key_press_cb(VteTerminal *vte, GdkEventKey *event)
             case GDK_KEY_0:
                 text = "\0330"; break;
         }
+    } else if (modifiers == GDK_SHIFT_MASK) {
+        switch (keyval) {
+            /* fix Shift+Fnum */
+            case GDK_KEY_F1:
+                text = "\033[23~"; break;
+            case GDK_KEY_F2:
+                text = "\033[24~"; break;
+            case GDK_KEY_F3:
+                text = "\033[25~"; break;
+            case GDK_KEY_F4:
+                text = "\033[26~"; break;
+            case GDK_KEY_F5:
+                text = "\033[28~"; break;
+            case GDK_KEY_F6:
+                text = "\033[29~"; break;
+            case GDK_KEY_F7:
+                text = "\033[31~"; break;
+            case GDK_KEY_F8:
+                text = "\033[32~"; break;
+            case GDK_KEY_F9:
+                text = "\033[33~"; break;
+            case GDK_KEY_F10:
+                text = "\033[34~"; break;
+        }
     } else if (modifiers == GDK_MOD1_MASK) {
         switch (keyval) {
             /* copy/paste with Alt+c/Alt+v */
