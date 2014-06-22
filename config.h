@@ -1,11 +1,11 @@
 #define RESIZE_GRIP             FALSE
 #define SCROLL_ON_OUTPUT        FALSE
-#define SCROLL_ON_KEYSTROKE     TRUE
+#define SCROLL_ON_KEYSTROKE     FALSE
 #define AUDIBLE_BELL            FALSE
 #define VISIBLE_BELL            FALSE
 #define MOUSE_AUTOHIDE          FALSE
 #define ALLOW_BOLD              TRUE
-#define SCROLLBACK_LINES        1000
+#define SCROLLBACK_LINES        0
 
 #define FONT                    "Monospace 13"
 
