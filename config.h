@@ -19,8 +19,6 @@
 #define CURSOR_SHAPE             VTE_CURSOR_SHAPE_BLOCK
 
 // Colors
-#if 0 // gjm colorscheme
-
 #define COLOR_FOREGROUND        "#c5c5c5"
 #define COLOR_FOREGROUND_BOLD   "#ffffff"
 #define COLOR_FOREGROUND_DIM    "#888888"
@@ -46,36 +44,6 @@ static const char *COLORS[16] = {
     "#63e7f0",
     "#f3f3f3",
 };
-
-#else // hybrid colorscheme
-
-#define COLOR_FOREGROUND        "#c5c8c6"
-#define COLOR_FOREGROUND_BOLD   "#ffffff"
-#define COLOR_FOREGROUND_DIM    "#888888"
-#define COLOR_BACKGROUND        "#1d1f21"
-#define COLOR_CURSOR            "#cee318"
-#define COLOR_HIGHLIGHT         "#2f2f2f"
-
-static const char *COLORS[16] = {
-    "#282a2e",
-    "#ac4142",
-    "#90a959",
-    "#de935d",
-    "#6a9fb5",
-    "#aa759f",
-    "#75b5aa",
-    "#707880",
-    "#373b41",
-    "#cc6666",
-    "#b5bd68",
-    "#f0c674",
-    "#81a2be",
-    "#b294bb",
-    "#8abeb7",
-    "#c5c8c6",
-};
-
-#endif
 
 // Regular expression for URL matching
 static const gchar url_regex[] = "(ftp|http)s?://[-a-zA-Z0-9.?$%&/=_~#.,:;+]*";
