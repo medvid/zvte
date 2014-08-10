@@ -6,6 +6,7 @@
 
 #include "config.h"
 
+static gboolean key_press_cb(VteTerminal *vte, GdkEventKey *event);
 static gboolean button_press_cb(VteTerminal *vte, GdkEventButton *event);
 static void beep_cb(GtkWidget *vte);
 static gboolean focus_cb(GtkWindow *window);
@@ -13,6 +14,109 @@ static gboolean focus_cb(GtkWindow *window);
 static void get_vte_padding(VteTerminal *vte, int *left, int *top, int *right, int *bottom);
 static char *check_match(VteTerminal *vte, int event_x, int event_y);
 static void setup(GtkWindow *window, VteTerminal *vte);
+
+static gboolean key_press_cb(VteTerminal *vte, GdkEventKey *event)
+{
+    const char *text = NULL;
+    const guint modifiers = event->state & gtk_accelerator_get_default_mod_mask();
+    const guint keyval = gdk_keyval_to_lower(event->keyval);
+
+    if (modifiers == (GDK_CONTROL_MASK|GDK_SHIFT_MASK)) {
+        switch (keyval) {
+            /* copy/paste with Ctrl+Shift+c/Ctrl+Shift+v */
+            case GDK_KEY_c:
+                vte_terminal_copy_clipboard(vte);
+                return TRUE;
+            case GDK_KEY_v:
+                vte_terminal_paste_clipboard(vte);
+                return TRUE;
+        }
+    } else if (modifiers == GDK_CONTROL_MASK) {
+        switch (keyval) {
+            /* Ctrl+num -> Alt+num */
+            case GDK_KEY_1:
+                text = "\0331"; break;
+            case GDK_KEY_2:
+                text = "\0332"; break;
+            case GDK_KEY_3:
+                text = "\0333"; break;
+            case GDK_KEY_4:
+                text = "\0334"; break;
+            case GDK_KEY_5:
+                text = "\0335"; break;
+            case GDK_KEY_6:
+                text = "\0336"; break;
+            case GDK_KEY_7:
+                text = "\0337"; break;
+            case GDK_KEY_8:
+                text = "\0338"; break;
+            case GDK_KEY_9:
+                text = "\0339"; break;
+            case GDK_KEY_0:
+                text = "\0330"; break;
+        }
+    } else if (modifiers == GDK_SHIFT_MASK) {
+        switch (keyval) {
+            /* fix Shift+Fnum */
+            case GDK_KEY_F1:
+                text = "\033[23~"; break;
+            case GDK_KEY_F2:
+                text = "\033[24~"; break;
+            case GDK_KEY_F3:
+                text = "\033[25~"; break;
+            case GDK_KEY_F4:
+                text = "\033[26~"; break;
+            case GDK_KEY_F5:
+                text = "\033[28~"; break;
+            case GDK_KEY_F6:
+                text = "\033[29~"; break;
+            case GDK_KEY_F7:
+                text = "\033[31~"; break;
+            case GDK_KEY_F8:
+                text = "\033[32~"; break;
+            case GDK_KEY_F9:
+                text = "\033[33~"; break;
+            case GDK_KEY_F10:
+                text = "\033[34~"; break;
+        }
+    } else if (modifiers == GDK_MOD1_MASK) {
+        switch (keyval) {
+            /* copy/paste with Alt+c/Alt+v */
+            case GDK_KEY_c:
+                vte_terminal_copy_clipboard(vte);
+                return TRUE;
+            case GDK_KEY_v:
+                vte_terminal_paste_clipboard(vte);
+                return TRUE;
+            /* Alt+num -> Alt+Fnum */
+            case GDK_KEY_1:
+                text = "\033[1;3P"; break;
+            case GDK_KEY_2:
+                text = "\033[1;3Q"; break;
+            case GDK_KEY_3:
+                text = "\033[1;3R"; break;
+            case GDK_KEY_4:
+                text = "\033[1;3S"; break;
+            case GDK_KEY_5:
+                text = "\033[15;3~"; break;
+            case GDK_KEY_6:
+                text = "\033[17;3~"; break;
+            case GDK_KEY_7:
+                text = "\033[18;3~"; break;
+            case GDK_KEY_8:
+                text = "\033[19;3~"; break;
+            case GDK_KEY_9:
+                text = "\033[20;3~"; break;
+            case GDK_KEY_0:
+                text = "\033[21;3~"; break;
+        }
+    }
+    if (text) {
+        vte_terminal_feed_child(vte, text, -1);
+        return TRUE;
+    }
+    return FALSE;
+}
 
 static gboolean button_press_cb(VteTerminal *vte, GdkEventButton *event)
 {
@@ -242,6 +346,7 @@ int main(int argc, char **argv)
         g_signal_connect(vte, "child-exited", G_CALLBACK(exit_with_status), NULL);
     }
     g_signal_connect(window, "destroy", G_CALLBACK(exit_with_success), NULL);
+    g_signal_connect(vte, "key-press-event", G_CALLBACK(key_press_cb), NULL);
     g_signal_connect(vte, "button-press-event", G_CALLBACK(button_press_cb), NULL);
     g_signal_connect(vte, "beep", G_CALLBACK(beep_cb), NULL);
 
