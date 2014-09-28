@@ -8,7 +8,7 @@
 
 static gboolean key_press_cb(VteTerminal *vte, GdkEventKey *event);
 static gboolean button_press_cb(VteTerminal *vte, GdkEventButton *event);
-static void beep_cb(GtkWidget *vte);
+static void bell_cb(GtkWidget *vte);
 static gboolean focus_cb(GtkWindow *window);
 
 static void get_vte_padding(VteTerminal *vte, int *left, int *top, int *right, int *bottom);
@@ -139,7 +139,7 @@ static gboolean button_press_cb(VteTerminal *vte, GdkEventButton *event)
     return TRUE;
 }
 
-static void beep_cb(GtkWidget *vte)
+static void bell_cb(GtkWidget *vte)
 {
     gtk_window_set_urgency_hint(GTK_WINDOW(gtk_widget_get_toplevel(vte)), TRUE);
 }
@@ -152,18 +152,14 @@ static gboolean focus_cb(GtkWindow *window)
 
 static void get_vte_padding(VteTerminal *vte, int *left, int *top, int *right, int *bottom)
 {
-    GtkBorder *border = NULL;
-    gtk_widget_style_get(GTK_WIDGET(vte), "inner-border", &border, NULL);
-    if (!border) {
-        g_warning("VTE's inner-border property unavailable");
-        *left = *top = *right = *bottom = 0;
-    } else {
-        *left = border->left;
-        *right = border->right;
-        *top = border->top;
-        *bottom = border->bottom;
-        gtk_border_free(border);
-    }
+    GtkBorder border;
+    gtk_style_context_get_padding(gtk_widget_get_style_context(GTK_WIDGET(vte)),
+                                  gtk_widget_get_state_flags(GTK_WIDGET(vte)),
+                                  &border);
+    *left = border.left;
+    *right = border.right;
+    *top = border.top;
+    *bottom = border.bottom;
 }
 
 static char *check_match(VteTerminal *vte, int event_x, int event_y)
@@ -210,23 +206,28 @@ static void load_theme(GtkWindow *window, VteTerminal *vte)
         }
     }
 
-    vte_terminal_set_colors_rgba(vte, NULL, NULL, palette, 256);
-    vte_terminal_set_color_foreground_rgba(vte, rgba_color(COLOR_FOREGROUND));
-    vte_terminal_set_color_bold_rgba(vte, rgba_color(COLOR_FOREGROUND_BOLD));
-    vte_terminal_set_color_dim_rgba(vte, rgba_color(COLOR_FOREGROUND_DIM));
-    vte_terminal_set_color_background_rgba(vte, rgba_color(COLOR_BACKGROUND));
+    vte_terminal_set_colors(vte, NULL, NULL, palette, 256);
+    vte_terminal_set_color_foreground(vte, rgba_color(COLOR_FOREGROUND));
+    vte_terminal_set_color_bold(vte, rgba_color(COLOR_FOREGROUND_BOLD));
+    vte_terminal_set_color_background(vte, rgba_color(COLOR_BACKGROUND));
     gtk_widget_override_background_color(GTK_WIDGET(window), GTK_STATE_FLAG_NORMAL, rgba_color(COLOR_BACKGROUND));
-    vte_terminal_set_color_cursor_rgba(vte, rgba_color(COLOR_CURSOR));
-    vte_terminal_set_color_highlight_rgba(vte, rgba_color(COLOR_HIGHLIGHT));
+    vte_terminal_set_color_cursor(vte, rgba_color(COLOR_CURSOR));
+    vte_terminal_set_color_highlight(vte, rgba_color(COLOR_HIGHLIGHT));
+}
+
+static void set_font_from_string(VteTerminal *vte)
+{
+    PangoFontDescription *desc;
+    desc = pango_font_description_from_string(FONT);
+    vte_terminal_set_font(vte, desc);
+    pango_font_description_free(desc);
 }
 
 static void setup(GtkWindow *window, VteTerminal *vte)
 {
-    gtk_window_set_has_resize_grip(window, RESIZE_GRIP);
     vte_terminal_set_scroll_on_output(vte, SCROLL_ON_OUTPUT);
     vte_terminal_set_scroll_on_keystroke(vte, SCROLL_ON_KEYSTROKE);
     vte_terminal_set_audible_bell(vte, AUDIBLE_BELL);
-    vte_terminal_set_visible_bell(vte, VISIBLE_BELL);
     vte_terminal_set_mouse_autohide(vte, MOUSE_AUTOHIDE);
     vte_terminal_set_allow_bold(vte, ALLOW_BOLD);
 
@@ -237,8 +238,7 @@ static void setup(GtkWindow *window, VteTerminal *vte)
                     NULL),
         (GRegexMatchFlags)0);
     vte_terminal_match_set_cursor_type(vte, tag, GDK_HAND2);
-    vte_terminal_set_font_from_string(vte, FONT);
-    vte_terminal_set_word_chars(vte, WORD_CHARS);
+    set_font_from_string(vte);
     vte_terminal_set_scrollback_lines(vte, SCROLLBACK_LINES);
     vte_terminal_set_cursor_blink_mode(vte, CURSOR_BLINK);
     vte_terminal_set_cursor_shape(vte, CURSOR_SHAPE);
@@ -247,9 +247,8 @@ static void setup(GtkWindow *window, VteTerminal *vte)
     load_theme(window, vte);
 }
 
-static void exit_with_status(VteTerminal *vte)
+static void exit_with_status(VteTerminal *vte, int status)
 {
-    int status = vte_terminal_get_child_exit_status(vte);
     gtk_main_quit();
     exit(WIFEXITED(status) ? WEXITSTATUS(status) : EXIT_FAILURE);
 }
@@ -322,17 +321,7 @@ int main(int argc, char **argv)
         command_argv = default_argv;
     }
 
-    VtePty *pty = vte_terminal_pty_new(vte, VTE_PTY_DEFAULT, &error);
-
-    if (!pty) {
-        g_printerr("failed to create pty: %s\n", error->message);
-        return EXIT_FAILURE;
-    }
-
     setup(GTK_WINDOW(window), vte);
-
-    vte_terminal_set_pty_object(vte, pty);
-    vte_pty_set_term(pty, term);
 
     GdkRGBA transparent = {0, 0, 0, 0};
 
@@ -348,7 +337,7 @@ int main(int argc, char **argv)
     g_signal_connect(window, "destroy", G_CALLBACK(exit_with_success), NULL);
     g_signal_connect(vte, "key-press-event", G_CALLBACK(key_press_cb), NULL);
     g_signal_connect(vte, "button-press-event", G_CALLBACK(button_press_cb), NULL);
-    g_signal_connect(vte, "beep", G_CALLBACK(beep_cb), NULL);
+    g_signal_connect(vte, "bell", G_CALLBACK(bell_cb), NULL);
 
     g_signal_connect(window, "focus-in-event",  G_CALLBACK(focus_cb), NULL);
     g_signal_connect(window, "focus-out-event", G_CALLBACK(focus_cb), NULL);
@@ -372,12 +361,10 @@ int main(int argc, char **argv)
     env = g_environ_setenv(env, "TERM", term, TRUE);
     env = g_environ_setenv(env, "VTE_VERSION", "3405", TRUE);
 
-    GPid ppid;
-    if (g_spawn_async(NULL, command_argv, env,
-                      (GSpawnFlags)(G_SPAWN_DO_NOT_REAP_CHILD | G_SPAWN_SEARCH_PATH),
-                      (GSpawnChildSetupFunc)vte_pty_child_setup, pty,
-                      &ppid, &error)) {
-        vte_terminal_watch_child(vte, ppid);
+    GPid child_pid;
+    if (vte_terminal_spawn_sync(vte, VTE_PTY_DEFAULT, NULL, command_argv, env,
+            G_SPAWN_SEARCH_PATH, NULL, NULL, &child_pid, NULL, &error)) {
+        vte_terminal_watch_child(vte, child_pid);
     } else {
         g_printerr("the command failed to run: %s\n", error->message);
         return EXIT_FAILURE;

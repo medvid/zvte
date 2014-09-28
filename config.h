@@ -1,16 +1,11 @@
-#define RESIZE_GRIP             FALSE
 #define SCROLL_ON_OUTPUT        FALSE
 #define SCROLL_ON_KEYSTROKE     FALSE
 #define AUDIBLE_BELL            FALSE
-#define VISIBLE_BELL            FALSE
 #define MOUSE_AUTOHIDE          FALSE
 #define ALLOW_BOLD              TRUE
 #define SCROLLBACK_LINES        0
 
 #define FONT                    "Monospace 13"
-
-// word characters used for word selection
-#define WORD_CHARS              "-A-Za-z0-9,./?%&#:_=+@~"
 
 // CURSOR_BLINK_{SYSTEM,ON,OFF}
 #define CURSOR_BLINK             VTE_CURSOR_BLINK_SYSTEM
@@ -21,7 +16,6 @@
 // Colors
 #define COLOR_FOREGROUND        "#c5c5c5"
 #define COLOR_FOREGROUND_BOLD   "#ffffff"
-#define COLOR_FOREGROUND_DIM    "#888888"
 #define COLOR_BACKGROUND        "#1c1c1c"
 #define COLOR_CURSOR            "#cee318"
 #define COLOR_HIGHLIGHT         "#2f2f2f"

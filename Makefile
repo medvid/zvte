@@ -1,6 +1,6 @@
 PREFIX = /usr/local
 GTK = gtk+-3.0
-VTE = vte-2.90
+VTE = vte-2.91
 
 CFLAGS := -std=c99 -O3 \
 	  -Wall -Wextra -pedantic \
@@ -15,11 +15,11 @@ CFLAGS := -std=c99 -O3 \
 	  -Wunused-macros \
 	  -DNDEBUG \
 	  -D_POSIX_C_SOURCE=200809L \
-	  ${shell pkg-config --cflags ${GTK} ${VTE}} \
+	  ${shell pkg-config --cflags ${VTE}} \
 	  ${CXXFLAGS}
 
 LDFLAGS := -s -Wl,--as-needed ${LDFLAGS}
-LDLIBS := ${shell pkg-config --libs ${GTK} ${VTE}}
+LDLIBS := ${shell pkg-config --libs ${VTE}}
 
 zvte: zvte.c config.h
 	${CC} ${CFLAGS} ${LDFLAGS} $< ${LDLIBS} -o $@
