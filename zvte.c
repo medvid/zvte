@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <sys/wait.h>
 
 #include <gdk/gdkx.h>
 #include <gtk/gtk.h>
