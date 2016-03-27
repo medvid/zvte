@@ -13,7 +13,7 @@ static void bell_cb(GtkWidget *vte);
 static gboolean focus_cb(GtkWindow *window);
 
 static void get_vte_padding(VteTerminal *vte, int *left, int *top, int *right, int *bottom);
-static char *check_match(VteTerminal *vte, int event_x, int event_y);
+static char *check_match(VteTerminal *vte, GdkEventButton *event);
 static void setup(GtkWindow *window, VteTerminal *vte);
 
 static gboolean key_press_cb(VteTerminal *vte, GdkEventKey *event)
@@ -121,7 +121,7 @@ static gboolean key_press_cb(VteTerminal *vte, GdkEventKey *event)
 
 static gboolean button_press_cb(VteTerminal *vte, GdkEventButton *event)
 {
-    char *match = check_match(vte, (int)event->x, (int)event->y);
+    char *match = check_match(vte, event);
     if (!match)
         return FALSE;
 
@@ -163,17 +163,10 @@ static void get_vte_padding(VteTerminal *vte, int *left, int *top, int *right, i
     *bottom = border.bottom;
 }
 
-static char *check_match(VteTerminal *vte, int event_x, int event_y)
+static char *check_match(VteTerminal *vte, GdkEventButton *event)
 {
-    int tag, padding_left, padding_top, padding_right, padding_bottom;
-    const long char_width = vte_terminal_get_char_width(vte);
-    const long char_height = vte_terminal_get_char_height(vte);
-
-    get_vte_padding(vte, &padding_left, &padding_top, &padding_right, &padding_bottom);
-    return vte_terminal_match_check(vte,
-                                    (event_x - padding_left) / char_width,
-                                    (event_y - padding_top) / char_height,
-                                    &tag);
+    int tag;
+    return vte_terminal_match_check_event(vte, (GdkEvent*) event, &tag);
 }
 
 static GdkRGBA *rgba_color(const gchar *spec)
@@ -211,7 +204,6 @@ static void load_theme(GtkWindow *window, VteTerminal *vte)
     vte_terminal_set_color_foreground(vte, rgba_color(COLOR_FOREGROUND));
     vte_terminal_set_color_bold(vte, rgba_color(COLOR_FOREGROUND_BOLD));
     vte_terminal_set_color_background(vte, rgba_color(COLOR_BACKGROUND));
-    gtk_widget_override_background_color(GTK_WIDGET(window), GTK_STATE_FLAG_NORMAL, rgba_color(COLOR_BACKGROUND));
     vte_terminal_set_color_cursor(vte, rgba_color(COLOR_CURSOR));
     vte_terminal_set_color_highlight(vte, rgba_color(COLOR_HIGHLIGHT));
 }
@@ -234,7 +226,7 @@ static void setup(GtkWindow *window, VteTerminal *vte)
 
     int tag = vte_terminal_match_add_gregex(vte,
         g_regex_new(url_regex,
-                    G_REGEX_CASELESS,
+                    G_REGEX_CASELESS | G_REGEX_MULTILINE,
                     G_REGEX_MATCH_NOTEMPTY,
                     NULL),
         (GRegexMatchFlags)0);
@@ -323,10 +315,6 @@ int main(int argc, char **argv)
     }
 
     setup(GTK_WINDOW(window), vte);
-
-    GdkRGBA transparent = {0, 0, 0, 0};
-
-    gtk_widget_override_background_color(hint_overlay, GTK_STATE_FLAG_NORMAL, &transparent);
 
     gtk_container_add(GTK_CONTAINER(panel_overlay), hint_overlay);
     gtk_container_add(GTK_CONTAINER(hint_overlay), vte_widget);
