@@ -5,7 +5,7 @@
 #define ALLOW_BOLD              TRUE
 #define SCROLLBACK_LINES        0
 
-#define FONT                    "Monospace 13"
+#define FONT                    "Monospace 16"
 
 // CURSOR_BLINK_{SYSTEM,ON,OFF}
 #define CURSOR_BLINK             VTE_CURSOR_BLINK_SYSTEM
