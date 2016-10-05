@@ -18,6 +18,7 @@
 #define COLOR_FOREGROUND_BOLD   "#ffffff"
 #define COLOR_BACKGROUND        "#1c1c1c"
 #define COLOR_CURSOR            "#cee318"
+#define COLOR_CURSOR_FOREGROUND "#cee318"
 #define COLOR_HIGHLIGHT         "#2f2f2f"
 
 static const char *COLORS[16] = {

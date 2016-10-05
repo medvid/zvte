@@ -1,8 +1,12 @@
+#define PCRE2_CODE_UNIT_WIDTH 8
+
 #include <stdlib.h>
+#include <string.h>
 #include <sys/wait.h>
 
 #include <gdk/gdkx.h>
 #include <gtk/gtk.h>
+#include <pcre2.h>
 #include <vte/vte.h>
 
 #include "config.h"
@@ -198,6 +202,7 @@ static void load_theme(GtkWindow *window, VteTerminal *vte)
             const unsigned shade = 8 + (i - 232) * 10;
             palette[i].red = palette[i].green = palette[i].blue = (shade | shade << 8) / 65535.0;
         }
+        palette[i].alpha = 0;
     }
 
     vte_terminal_set_colors(vte, NULL, NULL, palette, 256);
@@ -205,6 +210,7 @@ static void load_theme(GtkWindow *window, VteTerminal *vte)
     vte_terminal_set_color_bold(vte, rgba_color(COLOR_FOREGROUND_BOLD));
     vte_terminal_set_color_background(vte, rgba_color(COLOR_BACKGROUND));
     vte_terminal_set_color_cursor(vte, rgba_color(COLOR_CURSOR));
+    vte_terminal_set_color_cursor_foreground(vte, rgba_color(COLOR_CURSOR_FOREGROUND));
     vte_terminal_set_color_highlight(vte, rgba_color(COLOR_HIGHLIGHT));
 }
 
@@ -224,12 +230,10 @@ static void setup(GtkWindow *window, VteTerminal *vte)
     vte_terminal_set_mouse_autohide(vte, MOUSE_AUTOHIDE);
     vte_terminal_set_allow_bold(vte, ALLOW_BOLD);
 
-    int tag = vte_terminal_match_add_gregex(vte,
-        g_regex_new(url_regex,
-                    G_REGEX_CASELESS | G_REGEX_MULTILINE,
-                    G_REGEX_MATCH_NOTEMPTY,
-                    NULL),
-        (GRegexMatchFlags)0);
+    int tag = vte_terminal_match_add_regex(vte,
+        vte_regex_new_for_match(url_regex, strlen(url_regex),
+                    PCRE2_UTF | PCRE2_NO_UTF_CHECK | PCRE2_MULTILINE,
+                    NULL), 0);
     vte_terminal_match_set_cursor_type(vte, tag, GDK_HAND2);
     set_font_from_string(vte);
     vte_terminal_set_scrollback_lines(vte, SCROLLBACK_LINES);
@@ -273,8 +277,11 @@ int main(int argc, char **argv)
 
     if (!g_option_context_parse(context, &argc, &argv, &error)) {
         g_printerr("option parsing failed: %s\n", error->message);
+        g_clear_error(&error);
         return EXIT_FAILURE;
     }
+
+    g_option_context_free(context);
 
     if (directory) {
         if (chdir(directory) == -1) {
@@ -348,7 +355,6 @@ int main(int argc, char **argv)
     char **env = g_get_environ();
     env = g_environ_setenv(env, "WINDOWID", xid_s, TRUE);
     env = g_environ_setenv(env, "TERM", term, TRUE);
-    env = g_environ_setenv(env, "VTE_VERSION", "3405", TRUE);
 
     GPid child_pid;
     if (vte_terminal_spawn_sync(vte, VTE_PTY_DEFAULT, NULL, command_argv, env,
