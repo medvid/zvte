@@ -9,7 +9,7 @@ add_executable(zvte zvte.c config.h)
 include(FindPkgConfig)
 
 pkg_check_modules (GTK gtk+-3.0)
-pkg_check_modules (VTE vte-2.91)
+pkg_check_modules (VTE vte-2.91>=0.46.0 libpcre2-8)
 
 include_directories(${GTK_INCLUDE_DIRS} ${VTE_INCLUDE_DIRS})
 link_directories(${GTK_LIBRARY_DIRS} ${VTE_LIBRARY_DIRS})
