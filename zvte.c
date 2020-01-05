@@ -4,7 +4,7 @@
 #include <string.h>
 #include <sys/wait.h>
 
-#include <gdk/gdkx.h>
+#include <gdk/gdk.h>
 #include <gtk/gtk.h>
 #include <pcre2.h>
 #include <vte/vte.h>
@@ -350,10 +350,7 @@ int main(int argc, char **argv)
         g_printerr("no window\n");
         return EXIT_FAILURE;
     }
-    char xid_s[20];
-    snprintf(xid_s, sizeof xid_s, "%lu", GDK_WINDOW_XID(gdk_window));
     char **env = g_get_environ();
-    env = g_environ_setenv(env, "WINDOWID", xid_s, TRUE);
     env = g_environ_setenv(env, "TERM", term, TRUE);
 
     GPid child_pid;
