@@ -1,0 +1,10 @@
+trigger:
+- master
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+- script: apt install libgtk-3-dev libpcre2-dev libvte-2.91-dev
+
+- task: CMake@1
