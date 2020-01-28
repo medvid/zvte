@@ -13,7 +13,7 @@ steps:
 - task: CMake@1
   inputs:
     workingDirectory: 'build'
-    cmakeArgs: '-DCMAKE_BUILD_TYPE=Debug ..'
+    cmakeArgs: '-DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="-I/usr/include/vte-2.91" ..'
   displayName: Generate project
 
 - script: |
