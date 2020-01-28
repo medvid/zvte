@@ -11,4 +11,7 @@ steps:
   displayName: Install prerequisites
 
 - task: CMake@1
+  inputs:
+    workingDirectory: 'build'
+    cmakeArgs: '-DCMAKE_BUILD_TYPE=Debug ..'
   displayName: Run CMake build
