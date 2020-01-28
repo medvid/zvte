@@ -5,7 +5,9 @@ pool:
   vmImage: 'ubuntu-latest'
 
 steps:
-- script: sudo apt install libgtk-3-dev libpcre2-dev libvte-2.91-dev
+- script: |
+    sudo apt update
+    sudo apt install -y libgtk-3-dev libpcre2-dev libvte-2.91-dev
   displayName: Install prerequisites
 
 - task: CMake@1
