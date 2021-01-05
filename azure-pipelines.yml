@@ -7,7 +7,7 @@ pool:
 steps:
 - script: |
     sudo apt update -y
-    sudo apt install -y libgtk-3-dev libpcre2-dev libvte-2.91-dev
+    sudo apt install -y ninja-build libgtk-3-dev libpcre2-dev libvte-2.91-dev
   displayName: Install prerequisites
 
 - task: CMake@1
