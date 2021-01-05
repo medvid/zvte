@@ -2,7 +2,7 @@ trigger:
 - master
 
 pool:
-  vmImage: 'ubuntu-18.04'
+  vmImage: 'ubuntu-20.04'
 
 steps:
 - script: |
@@ -13,11 +13,9 @@ steps:
 - task: CMake@1
   inputs:
     workingDirectory: 'build'
-    cmakeArgs: '-DCMAKE_BUILD_TYPE=Debug ..'
+    cmakeArgs: '-GNinja -DCMAKE_BUILD_TYPE=Debug ..'
   displayName: Generate project
 
 - script: |
-    cd build
-    make
+    ninja -C build
   displayName: Build project
-  
